@@ -28,12 +28,20 @@ class Thread(models.Model):
     category = models.ManyToManyField(Category, related_name='threads')
     cover = models.ImageField(upload_to='covers')
 
+    def __str__(self):
+        return f'{self.pk}______{self.name}______{self.author}'
+
 
 class Answer(models.Model):
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='answers')
     thread = models.ForeignKey(Thread, on_delete=models.CASCADE, related_name='answers')
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.text}'
+
+
 
 
 class Comment(models.Model):
@@ -43,10 +51,14 @@ class Comment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+class Comment_Image(models.Model):
+    image = models.ImageField(upload_to='images')
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='comment_images')
+
+
 class Image(models.Model):
     image = models.ImageField(upload_to='images')
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE, related_name='images')
-    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='comment_images')
 
 
 class Like(models.Model):
@@ -62,3 +74,8 @@ class Rating(models.Model):
         validators=[MinValueValidator(1),
                     MaxValueValidator(5)], default=1
     )
+
+
+class Favourite(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorites')
+    answer = models.ForeignKey(Answer, on_delete=models.CASCADE, related_name='favorites')

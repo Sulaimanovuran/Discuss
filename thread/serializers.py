@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from thread.models import Category, Thread, Answer, Image, Comment
+from thread.models import Category, Thread, Answer, Image, Comment, Comment_Image
+from thread.utils import sort_func
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -11,23 +12,21 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ThreadSerializer(serializers.ModelSerializer):
-    author = serializers.ReadOnlyField(source='author.username')
-
-    class Meta:
-        model = Thread
-        fields = '__all__'
-
-
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
         fields = ['image']
 
 
+class CommentImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment_Image
+        fields = ['image']
+
+
 class CommentSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
-    images = ImageSerializer(many=True, read_only=True)
+    images = CommentImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Comment
@@ -39,7 +38,7 @@ class CommentSerializer(serializers.ModelSerializer):
         comment = Comment.objects.create(**validated_data)
 
         for image in images.getlist('images'):
-            Image.objects.create(comment=comment, image=image)
+            Comment_Image.objects.create(comment=comment, image=image)
 
         return comment
 
@@ -57,7 +56,6 @@ class AnswerSerializer(serializers.ModelSerializer):
         requests = self.context.get('request')
         images = requests.FILES
         answer = Answer.objects.create(**validated_data)
-
         for image in images.getlist('images'):
             Image.objects.create(answer=answer, image=image)
         return answer
@@ -65,14 +63,20 @@ class AnswerSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['likes'] = instance.likes.filter(like=True).count()
-        rating_result = 0
-        for rating in instance.ratings.all():
-            rating_result += int(rating.rating)
         try:
-            representation['rating'] = rating_result / instance.ratings.all().count()
+            representation['rating'] = sort_func(instance)
         except ZeroDivisionError:
             pass
         return representation
+
+
+class ThreadSerializer(serializers.ModelSerializer):
+    author = serializers.ReadOnlyField(source='author.username')
+    answers = AnswerSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Thread
+        fields = '__all__'
 
 
 class RatingSerializer(serializers.Serializer):

@@ -1,15 +1,13 @@
 from django.shortcuts import render
-from django_filters import OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
-from rest_framework.filters import SearchFilter
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from thread.models import Category, Thread, Answer, Comment, Like, Rating
-from thread.permissions import IsOwner
+from thread.models import *
 from thread.serializers import *
 
 
@@ -45,6 +43,12 @@ class AnswerView(ModelViewSet):
     queryset = Answer.objects.all()
     serializer_class = AnswerSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    ordering_fields = ['rating']
+
+    def get_queryset(self):
+        sorted_queryset = sorted(self.queryset, key=sort_func, reverse=True)
+        return sorted_queryset
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -71,6 +75,20 @@ class AnswerView(ModelViewSet):
         obj.rating = request.data['rating']
         obj.save()
         return Response(request.data, status=201)
+
+    @action(methods=['POST'], detail=True)
+    def favorite(self, request, pk, *args, **kwargs):
+        try:
+            favorite, availability = Favourite.objects.get_or_create(owner=request.user, answer_id=pk)
+
+            if not availability:
+                favorite.delete()
+                return Response('Удалено из избранного')
+            else:
+                favorite.save()
+                return Response('Добавлено в избранное')
+        except:
+            return Response('Нет такого "ответа"!')
 
 
 class CommentView(ModelViewSet):

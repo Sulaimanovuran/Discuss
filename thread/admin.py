@@ -1,9 +1,10 @@
 from django.contrib import admin
 
-from thread.models import Category, Thread, Answer, Image, Comment, Like, Rating
+from thread.models import Category, Thread, Answer, Image, Comment, Like, Rating, Comment_Image, Favourite
 
 admin.site.register(Category)
 admin.site.register(Image)
+admin.site.register(Comment_Image)
 
 
 class ThreadWithImage(admin.ModelAdmin):
@@ -16,7 +17,7 @@ admin.site.register(Thread, ThreadWithImage)
 class ImageInAdmin(admin.TabularInline):
     model = Image
     fields = ['image']
-    max_num = 5
+    max_num = 3
 
 
 class AnswerWithImage(admin.ModelAdmin):
@@ -24,8 +25,14 @@ class AnswerWithImage(admin.ModelAdmin):
     list_display = ['id', 'created_at', 'thread', 'owner', 'text']
 
 
+class CommentImageInAdmin(admin.TabularInline):
+    model = Comment_Image
+    fields = ['image']
+    max_num = 2
+
+
 class CommentWithImage(admin.ModelAdmin):
-    inlines = [ImageInAdmin]
+    inlines = [CommentImageInAdmin]
     list_display = ['id', 'created_at', 'owner', 'text', 'answer']
 
 
@@ -41,3 +48,4 @@ admin.site.register(Answer, AnswerWithImage)
 admin.site.register(Comment, CommentWithImage)
 admin.site.register(Like, Like1)
 admin.site.register(Rating, Rating1)
+admin.site.register(Favourite)
