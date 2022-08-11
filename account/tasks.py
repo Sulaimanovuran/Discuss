@@ -1,25 +1,29 @@
 from django.core.mail import send_mail
+from django.template.loader import render_to_string
 
 from main.celery import app
 
 
 @app.task
-def celery_send_confirmation_email(code, email):
-    body = f'http://localhost:8000/account/active/{code}/'
+def send_activation_email(code, email):
+    message = render_to_string('send_activation_mail.html', {'email': email, 'code': code})
+    # body = f'http://localhost:8000/account/active/{code}/'
     send_mail(
         'From Discuss',
-        body,
+        '',
         'sulimanovuran@gmail.com',
-        [email]
+        [email],
+        html_message=message
     )
 
 
 @app.task
 def restore_password_mail(code, email, username):
-    body = f'Здравствуйте {username.title()}\n Ваш код для восстановления пароля\n{code}'
+    message = render_to_string('send_restore_password_mail.html', {'username': username, 'code': code})
     send_mail(
         'From Discuss',
-        body,
+        '',
         'sulaimaonovuran@gmail.com',
-        [email]
+        [email],
+        html_message=message
     )

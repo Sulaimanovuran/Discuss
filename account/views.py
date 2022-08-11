@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from account.serializers import RegisterSerializer, LoginSerializer, ChangePasswordSerializer, \
-    ForgotPasswordSerializer, ForgotPasswordCompleteSerializer
+    ForgotPasswordSerializer, PasswordRetrievalSerializer
 
 User = get_user_model()
 
@@ -16,9 +16,8 @@ class RegistrationApiView(APIView):
         serializer = RegisterSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            message = f'Вы успешно зарегестрированы. ' \
-                      f'Bам отправлено письмо с активацией'
-            return Response(message, status=201)
+            return Response('Вы успешно зарегестрированы,'
+                            'вам на почту отправлена ссылка для активации аккаунта', status=201)
 
 
 class ActivationView(APIView):
@@ -46,7 +45,7 @@ class ChangePasswordView(APIView):
 
         serializers.is_valid(raise_exception=True)  # проверка на корректность введенных данных
         serializers.set_new_password()
-        return Response('Succesfull updated password')
+        return Response('Вы успешно изменили свой пароль')
 
 
 class LogOutApiView(APIView):
@@ -56,7 +55,7 @@ class LogOutApiView(APIView):
         try:
             user = request.user
             Token.objects.filter(user=user).delete()
-            return Response('Вы успешно разлогинились')
+            return Response('Вы вышли из своего аккаунта')
         except:
             return Response(status=403)
 
@@ -70,10 +69,10 @@ class ForgotPasswordView(APIView):
         return Response('Вам отправлено письмо для восстановления пароля')
 
 
-class ForgotPasswordComplete(APIView):
+class PasswordRetrievalView(APIView):
     def post(self, request):
         data = request.data
-        serializer = ForgotPasswordCompleteSerializer(data=data)
+        serializer = PasswordRetrievalSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.set_new_pass()
-        return Response('Good')
+        return Response('Вы успешно восстановили свой пароль')

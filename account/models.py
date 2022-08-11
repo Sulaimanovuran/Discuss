@@ -5,8 +5,6 @@ from django.db import models
 
 class MyUserManager(BaseUserManager):
 
-
-
     def _create_user(self, username, email, password, **extra_fields):
         if not email:
             raise ValueError("The given email must be set")
@@ -52,9 +50,6 @@ class MyUser(AbstractUser):
     REQUIRED_FIELDS = ['username']
 
     objects = MyUserManager()
-
-    # def __str__(self):
-    #     return f'{self.id} --- {self.username} --- {self.email}'
 
     def generate_activation_code(self):
         import uuid

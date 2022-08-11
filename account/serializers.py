@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model, authenticate
 from django.core.mail import send_mail
 from rest_framework import serializers
 
-from account.tasks import celery_send_confirmation_email, restore_password_mail
+from account.tasks import send_activation_email, restore_password_mail
 
 User = get_user_model()
 
@@ -19,14 +19,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         password2 = attrs.pop('password2')
 
         if password != password2:
-            raise serializers.ValidationError('password did not math')
+            raise serializers.ValidationError('Пароли не совпадают')
         return attrs
 
     def create(self, validated_data):
-        print(validated_data)
         user = User.objects.create_user(**validated_data)
         code = user.activation_code
-        celery_send_confirmation_email.delay(code, user.email)
+        send_activation_email.delay(code, user.email)
         return user
 
 
@@ -36,7 +35,7 @@ class LoginSerializer(serializers.Serializer):
 
     def validate(self, email):
         if not User.objects.filter(email=email).exists():
-            raise serializers.ValidationError('Пользователь не зарегестрирован!!!')
+            raise serializers.ValidationError('Пользователь не зарегестрирован')
         return email
 
     def validate(self, attrs):
@@ -46,7 +45,7 @@ class LoginSerializer(serializers.Serializer):
         if email and password:
             user = authenticate(username=email, password=password)
             if not user:
-                raise serializers.ValidationError("Wrong email or password")
+                raise serializers.ValidationError("Email или пароль введены некорректно")
             attrs['user'] = user
             return attrs
 
@@ -59,14 +58,14 @@ class ChangePasswordSerializer(serializers.Serializer):
     def validate_old_password(self, p):
         user = self.context.get('request').user
         if not user.check_password(p):
-            raise serializers.ValidationError('Wrong password')
+            raise serializers.ValidationError('Неверный пароль')
         return p
 
     def validate(self, attrs):
         p1 = attrs.get('password')
         p2 = attrs.get('password2')
         if p1 != p2:
-            raise serializers.ValidationError('passwords did not match')
+            raise serializers.ValidationError('Пароли не совпадают')
         return attrs
 
     def set_new_password(self):
@@ -87,12 +86,12 @@ class ForgotPasswordSerializer(serializers.Serializer):
     def send_code(self):
         email = self.validated_data.get('email')
         user = User.objects.get(email=email)
-        user.create_activation_code()
+        user.generate_activation_code()
         user.save()
         restore_password_mail.delay(user.activation_code, email, user.username)
 
 
-class ForgotPasswordCompleteSerializer(serializers.Serializer):
+class PasswordRetrievalSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
     code = serializers.CharField(min_length=8, required=True)
     password = serializers.CharField(required=True)
