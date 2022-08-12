@@ -42,8 +42,6 @@ class Answer(models.Model):
         return f'{self.text}'
 
 
-
-
 class Comment(models.Model):
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='comments')
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE, related_name='comments')
@@ -79,3 +77,13 @@ class Rating(models.Model):
 class Favourite(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorites')
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE, related_name='favorites')
+
+    def __str__(self):
+        return f'{self.answer.id}.   {self.owner.username}: {self.answer.text}'
+
+
+class Awareness(models.Model):
+    email = models.EmailField(unique=True)
+
+    def __str__(self):
+        return self.email

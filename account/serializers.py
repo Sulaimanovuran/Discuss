@@ -7,6 +7,26 @@ from account.tasks import send_activation_email, restore_password_mail
 User = get_user_model()
 
 
+class MyUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id",
+                  "username",
+                  "email",
+                  'gender',
+                  'avatar'
+                  ]
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        favourites = []
+        for favourite in instance.favorites.all():
+            favourites.append(str(favourite))
+        representation['Favourites'] = favourites
+        return representation
+
+
+
 class RegisterSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(min_length=6, write_only=True, required=True)
 

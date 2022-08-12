@@ -1,11 +1,12 @@
 from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from account.serializers import RegisterSerializer, LoginSerializer, ChangePasswordSerializer, \
-    ForgotPasswordSerializer, PasswordRetrievalSerializer
+    ForgotPasswordSerializer, PasswordRetrievalSerializer, MyUserSerializer
 
 User = get_user_model()
 
@@ -76,3 +77,9 @@ class PasswordRetrievalView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.set_new_pass()
         return Response('Вы успешно восстановили свой пароль')
+
+
+class AccountRetrieve(RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = MyUserSerializer
+    permission_classes = [IsAuthenticated]

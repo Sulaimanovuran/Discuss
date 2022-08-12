@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from thread.models import Category, Thread, Answer, Image, Comment, Comment_Image
+from thread.models import Category, Thread, Answer, Image, Comment, Comment_Image, Awareness
+from thread.tasks import send_comment
 from thread.utils import sort_func
 
 
@@ -39,7 +40,10 @@ class CommentSerializer(serializers.ModelSerializer):
 
         for image in images.getlist('images'):
             Comment_Image.objects.create(comment=comment, image=image)
-
+        answer = validated_data['answer']
+        author = validated_data['owner']
+        body = validated_data['text']
+        send_comment.delay(answer=str(answer), author=str(author), body=str(body))
         return comment
 
 
@@ -81,3 +85,9 @@ class ThreadSerializer(serializers.ModelSerializer):
 
 class RatingSerializer(serializers.Serializer):
     rating = serializers.IntegerField(required=True, min_value=1, max_value=5)
+
+
+class AwarenessSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Awareness
+        fields = '__all__'

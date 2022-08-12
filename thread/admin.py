@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from thread.models import Category, Thread, Answer, Image, Comment, Like, Rating, Comment_Image, Favourite
+from thread.models import Category, Thread, Answer, Image, Comment, Like, Rating, Comment_Image, Favourite, Awareness
 
 admin.site.register(Category)
 admin.site.register(Image)
@@ -49,3 +49,4 @@ admin.site.register(Comment, CommentWithImage)
 admin.site.register(Like, Like1)
 admin.site.register(Rating, Rating1)
 admin.site.register(Favourite)
+admin.site.register(Awareness)

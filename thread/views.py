@@ -1,11 +1,12 @@
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import mixins
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
 
 from thread.models import *
 from thread.serializers import *
@@ -43,8 +44,8 @@ class AnswerView(ModelViewSet):
     queryset = Answer.objects.all()
     serializer_class = AnswerSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
-    ordering_fields = ['rating']
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    search_fields = ['text']
 
     def get_queryset(self):
         sorted_queryset = sorted(self.queryset, key=sort_func, reverse=True)
@@ -98,3 +99,8 @@ class CommentView(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+
+class AwarenessView(mixins.CreateModelMixin, mixins.DestroyModelMixin, GenericViewSet):
+    queryset = Awareness.objects.all()
+    serializer_class = AwarenessSerializer
