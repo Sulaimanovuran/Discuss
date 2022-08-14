@@ -47,9 +47,6 @@ class AnswerView(ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter]
     search_fields = ['text']
 
-    def get_queryset(self):
-        sorted_queryset = sorted(self.queryset, key=sort_func, reverse=True)
-        return sorted_queryset
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -104,3 +101,9 @@ class CommentView(ModelViewSet):
 class AwarenessView(mixins.CreateModelMixin, mixins.DestroyModelMixin, GenericViewSet):
     queryset = Awareness.objects.all()
     serializer_class = AwarenessSerializer
+
+
+
+
+
+

@@ -50,7 +50,7 @@ class Comment(models.Model):
 
 
 class Comment_Image(models.Model):
-    image = models.ImageField(upload_to='images')
+    image = models.ImageField(upload_to='comment_images')
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='comment_images')
 
 

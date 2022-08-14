@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from thread.models import Category, Thread, Answer, Image, Comment, Comment_Image, Awareness
 from thread.tasks import send_comment
-from thread.utils import sort_func
+from thread.utils import average_func
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -22,7 +22,7 @@ class ImageSerializer(serializers.ModelSerializer):
 class CommentImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment_Image
-        fields = ['image']
+        fields = '__all__'
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -37,7 +37,6 @@ class CommentSerializer(serializers.ModelSerializer):
         requests = self.context.get('request')
         images = requests.FILES
         comment = Comment.objects.create(**validated_data)
-
         for image in images.getlist('images'):
             Comment_Image.objects.create(comment=comment, image=image)
         answer = validated_data['answer']
@@ -45,6 +44,7 @@ class CommentSerializer(serializers.ModelSerializer):
         body = validated_data['text']
         send_comment.delay(answer=str(answer), author=str(author), body=str(body))
         return comment
+
 
 
 class AnswerSerializer(serializers.ModelSerializer):
@@ -68,7 +68,7 @@ class AnswerSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         representation['likes'] = instance.likes.filter(like=True).count()
         try:
-            representation['rating'] = sort_func(instance)
+            representation['rating'] = average_func(instance)
         except ZeroDivisionError:
             pass
         return representation

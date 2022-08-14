@@ -22,7 +22,10 @@ class ImageInAdmin(admin.TabularInline):
 
 class AnswerWithImage(admin.ModelAdmin):
     inlines = [ImageInAdmin]
-    list_display = ['id', 'created_at', 'thread', 'owner', 'text']
+    list_display = ['id', 'created_at', 'thread', 'owner', 'text', 'total_likes']
+
+    def total_likes(self, obj):
+        return obj.likes.filter(like=True).count()
 
 
 class CommentImageInAdmin(admin.TabularInline):
