@@ -7,7 +7,6 @@ from main.celery import app
 @app.task
 def send_activation_email(code, email):
     message = render_to_string('send_activation_mail.html', {'email': email, 'code': code})
-    # body = f'http://localhost:8000/account/active/{code}/'
     send_mail(
         'From Discuss',
         '',
